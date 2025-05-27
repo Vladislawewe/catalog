@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+psycopg2-binary
+Flask-Migrate
+Jinja2
+Flask-WTF
+email-validator

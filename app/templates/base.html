@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Каталог фильмов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('main.index') }}">Главная</a>
+        <a href="{{ url_for('main.movies') }}">Фильмы</a>
+        <a href="{{ url_for('main.directors') }}">Режиссёры</a>
+        <a href="{{ url_for('main.actors') }}">Актёры</a>
+        <a href="{{ url_for('main.users') }}">Пользователи</a>
+        <a href="{{ url_for('main.reviews') }}">Отзывы</a>
+        <a href="{{ url_for('main.top_rated_movies') }}">Топ фильмов</a>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

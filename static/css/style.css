@@ -1,0 +1,25 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    background: #333;
+    padding: 1em;
+}
+
+nav a {
+    color: #fff;
+    margin-right: 1em;
+    text-decoration: none;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2em auto;
+    background: #fff;
+    padding: 2em;
+    border-radius: 8px;
+}
