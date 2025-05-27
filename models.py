@@ -21,7 +21,8 @@ class Movie(db.Model):
     genre_id = db.Column(db.Integer, db.ForeignKey('genres.id'))
     director_id = db.Column(db.Integer, db.ForeignKey('directors.id'))
     duration = db.Column(db.Integer)
-    rating = db.Column(db.Numeric(3,1))  # Поле остается, но будет обновляться
+    rating = db.Column(db.Numeric(3,1))
+    image_path = db.Column(db.String(255))  # Путь к изображению
     genre = db.relationship('Genre', backref='movies', lazy=True)
     director = db.relationship('Director', backref='movies', lazy=True)
     reviews = db.relationship('Review', backref='movie', lazy=True)

@@ -1,40 +1,51 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
 }
-nav {
-    margin-bottom: 20px;
+
+.navbar-brand {
+    font-weight: bold;
 }
-nav a {
-    margin-right: 10px;
+
+.card {
+    transition: transform 0.2s;
 }
-.alert {
-    padding: 10px;
-    margin-bottom: 10px;
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-.alert-success {
-    background-color: #dff0d8;
+
+.card-img-top {
+    height: 300px;
+    object-fit: cover;
 }
-.alert-danger {
-    background-color: #f2dede;
-}
-form {
-    max-width: 500px;
-    margin: 20px 0;
-}
-form label {
-    display: block;
-    margin: 10px 0 5px;
-}
-form input, form textarea {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-}
-form input[type="submit"] {
+
+.btn-primary {
     background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+}
+
+footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.img-fluid {
+    max-height: 400px;
+    object-fit: cover;
 }

@@ -4,6 +4,27 @@ from werkzeug.security import generate_password_hash
 
 # Используем контекст приложения Flask для работы с базой данных
 with app.app_context():
+    # Удаление дубликатов фильмов по title и year
+    def remove_duplicate_movies():
+        duplicates = (
+            db.session.query(Movie.title, Movie.year)
+            .group_by(Movie.title, Movie.year)
+            .having(db.func.count() > 1)
+            .all()
+        )
+        for title, year in duplicates:
+            # Находим все записи с этим title и year, оставляем только первую (с наименьшим id)
+            movies = Movie.query.filter_by(title=title, year=year).order_by(Movie.id).all()
+            for movie in movies[1:]:  # Удаляем все, кроме первой
+                # Удаляем связанные отзывы и записи в movie_actors
+                Review.query.filter_by(movie_id=movie.id).delete()
+                db.session.execute(db.text("DELETE FROM movie_actors WHERE movie_id = :movie_id"), {"movie_id": movie.id})
+                db.session.delete(movie)
+        db.session.commit()
+
+    # Вызываем удаление дубликатов
+    remove_duplicate_movies()
+
     # Проверяем и создаем жанры, если их еще нет
     genres = {name: Genre.query.filter_by(name=name).first() or Genre(name=name)
               for name in ['Боевик', 'Комедия', 'Драма', 'Фантастика', 'Триллер']}
@@ -77,7 +98,8 @@ with app.app_context():
         year=1998,
         genre=genres['Боевик'],
         director=directors['Стивен Спилберг'],
-        duration=169
+        duration=169,
+        image_path='images/saving_private_ryan.jpg'
     )
     movie1.actors.append(actors['Том Хэнкс'])
 
@@ -86,7 +108,8 @@ with app.app_context():
         year=2010,
         genre=genres['Боевик'],
         director=directors['Кристофер Нолан'],
-        duration=148
+        duration=148,
+        image_path='images/inception.jpg'
     )
     movie2.actors.append(actors['Леонардо ДиКаприо'])
 
@@ -95,9 +118,16 @@ with app.app_context():
         year=2008,
         genre=genres['Боевик'],
         director=directors['Кристофер Нолан'],
-        duration=152
+        duration=152,
+        image_path='images/the_dark_knight.jpg'
     )
     movie3.actors.append(actors['Киллиан Мёрфи'])
+
+    # Проверка и добавление исходных фильмов
+    for movie in [movie1, movie2, movie3]:
+        if not Movie.query.filter_by(title=movie.title, year=movie.year).first():
+            db.session.add(movie)
+    db.session.commit()
 
     # Добавление 10 новых фильмов
     new_movies_data = [
@@ -107,6 +137,7 @@ with app.app_context():
             'genre': genres['Боевик'],
             'director': directors['Квентин Тарантино'],
             'duration': 99,
+            'image_path': 'images/reservoir_dogs.jpg',
             'actors': [actors['Брэд Питт'], actors['Хоакин Феникс']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 9.0, 'comment': 'Культовый фильм, отличная режиссура!'},
@@ -120,6 +151,7 @@ with app.app_context():
             'genre': genres['Драма'],
             'director': directors['Джеймс Кэмерон'],
             'duration': 194,
+            'image_path': 'images/titanic.jpg',
             'actors': [actors['Леонардо ДиКаприо'], actors['Кейт Уинслет']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Эмоциональная классика, до слез!'},
@@ -133,6 +165,7 @@ with app.app_context():
             'genre': genres['Триллер'],
             'director': directors['Дэвид Финчер'],
             'duration': 139,
+            'image_path': 'images/fight_club.jpg',
             'actors': [actors['Брэд Питт'], actors['Морган Фриман']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Шедевр, неожиданный поворот!'},
@@ -146,6 +179,7 @@ with app.app_context():
             'genre': genres['Фантастика'],
             'director': directors['Ридли Скотт'],
             'duration': 117,
+            'image_path': 'images/alien.jpg',
             'actors': [actors['Скарлетт Йоханссон'], actors['Джонни Депп']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Классика научной фантастики!'},
@@ -159,6 +193,7 @@ with app.app_context():
             'genre': genres['Драма'],
             'director': directors['Мартин Скорсезе'],
             'duration': 114,
+            'image_path': 'images/taxi_driver.jpg',
             'actors': [actors['Роберт Де Ниро'], actors['Энн Хэтэуэй']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Глубокий и мрачный фильм.'},
@@ -172,6 +207,7 @@ with app.app_context():
             'genre': genres['Боевик'],
             'director': directors['Гай Ричи'],
             'duration': 114,
+            'image_path': 'images/rocknrolla.jpg',
             'actors': [actors['Том Харди'], actors['Эмили Блант']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 7.5, 'comment': 'Динамично и стильно!'},
@@ -185,6 +221,7 @@ with app.app_context():
             'genre': genres['Драма'],
             'director': directors['Вонг Кар-вай'],
             'duration': 98,
+            'image_path': 'images/in_the_mood_for_love.jpg',
             'actors': [actors['Райан Гослинг'], actors['Эмма Стоун']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Красивая и эмоциональная история.'},
@@ -198,6 +235,7 @@ with app.app_context():
             'genre': genres['Фантастика'],
             'director': directors['Дени Вильнёв'],
             'duration': 155,
+            'image_path': 'images/dune.jpg',
             'actors': [actors['Зендая Абобовна'], actors['Тимоти Шаламе']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 9.0, 'comment': 'Эпичная экранизация!'},
@@ -211,6 +249,7 @@ with app.app_context():
             'genre': genres['Триллер'],
             'director': directors['Бонг Джун-хо'],
             'duration': 132,
+            'image_path': 'images/parasite.jpg',
             'actors': [actors['Сон Кан-хо'], actors['Чхве Мин-сик']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Гениальный фильм!'},
@@ -224,31 +263,26 @@ with app.app_context():
             'genre': genres['Фантастика'],
             'director': directors['Скотт Дерриксон'],
             'duration': 115,
+            'image_path': 'images/doctor_strange.jpg',
             'actors': [actors['Бенедикт Камбербэтч'], actors['Тильда Свинтон']],
             'reviews': [
                 {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Классные визуальные эффекты!'},
-                {'user': users['ekaterina@example.com'], 'rating': 6.5, 'comment': 'Сюжет предсказуемый.'},
+                {'user': users['ekaterina@example.com'], 'rating': 6.6, 'comment': 'Сюжет предсказуемый.'},
                 {'user': users['dmitry@example.com'], 'rating': 7.5, 'comment': 'Зрелищно, но не шедевр.'}
             ]
         }
     ]
 
-    # Проверка и добавление исходных фильмов
-    for movie in [movie1, movie2, movie3]:
-        if not Movie.query.filter_by(title=movie.title, year=movie.year).first():
-            db.session.add(movie)
-    db.session.commit()
-
     # Добавление новых фильмов
     for movie_data in new_movies_data:
-        existing_movie = Movie.query.filter_by(title=movie_data['title'], year=movie_data['year']).first()
-        if not existing_movie:
+        if not Movie.query.filter_by(title=movie_data['title'], year=movie_data['year']).first():
             movie = Movie(
                 title=movie_data['title'],
                 year=movie_data['year'],
                 genre=movie_data['genre'],
                 director=movie_data['director'],
-                duration=movie_data['duration']
+                duration=movie_data['duration'],
+                image_path=movie_data['image_path']
             )
             for actor in movie_data['actors']:
                 movie.actors.append(actor)
@@ -277,7 +311,7 @@ with app.app_context():
         {'movie': movie2, 'user': users['dmitry@example.com'], 'rating': 6.0, 'comment': 'Сложно следить за сюжетом.'},
         {'movie': movie3, 'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Лучший фильм Нолана!'},
         {'movie': movie3, 'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Хорош, но переоценен.'},
-        {'movie': movie3, 'user': users['dmitry@example.com'], 'rating': 6.5, 'comment': 'Сюжет запутанный.'}
+        {'movie': movie3, 'user': users['dmitry@example.com'], 'rating': 6.6, 'comment': 'Сюжет запутанный.'}
     ]
     for review_data in existing_reviews:
         if not Review.query.filter_by(movie_id=review_data['movie'].id, user_id=review_data['user'].id, comment=review_data['comment']).first():
