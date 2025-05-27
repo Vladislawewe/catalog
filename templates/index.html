@@ -4,16 +4,16 @@
     <h1 class="display-4 fw-bold text-dark catalog-title">Каталог фильмов</h1>
 </div>
 <div class="table-responsive">
-    <table class="table table-borderless">
+    <table class="table table-borderless movie-table">
         <tbody>
             {% for i in range(0, movies|length, 3) %}
             <tr>
                 {% for movie in movies[i:i+3] %}
                 <td class="movie-cell">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card h-100 shadow-sm movie-card">
                         <img src="{{ url_for('static', filename=movie.image_path) }}" class="card-img-top" alt="{{ movie.title }}" loading="lazy">
                         <div class="card-body">
-                            <h5 class="card-title">
+                            <h5 class="card-title text-truncate">
                                 <a href="{{ url_for('movie_detail', id=movie.id) }}" class="text-decoration-none">{{ movie.title }} ({{ movie.year }})</a>
                             </h5>
                             <p class="card-text">
@@ -26,7 +26,7 @@
                 {% endfor %}
                 {% if movies[i:i+3]|length < 3 %}
                     {% for j in range(movies[i:i+3]|length, 3) %}
-                    <td></td>
+                    <td class="movie-cell"></td>
                     {% endfor %}
                 {% endif %}
             </tr>

@@ -9,31 +9,50 @@ body {
     color: #343a40;
 }
 
+.movie-table {
+    width: 100%;
+    table-layout: fixed; /* Фиксированная ширина ячеек */
+}
+
 .movie-cell {
     width: 33.333%;
     padding: 15px;
     vertical-align: top;
+    box-sizing: border-box;
 }
 
-.card {
+.movie-card {
+    width: 100%;
+    max-width: 300px; /* Ограничиваем ширину карточки */
+    min-height: 450px; /* Фиксируем минимальную высоту */
+    margin: 0 auto; /* Центрируем карточку */
     transition: transform 0.2s;
     border: none;
     border-radius: 10px;
     overflow: hidden;
 }
 
-.card:hover {
+.movie-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .card-img-top {
     height: 300px;
+    width: 100%;
     object-fit: cover;
 }
 
 .card-body {
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
 }
 
 .card-title a {
@@ -44,6 +63,10 @@ body {
 .card-title a:hover {
     color: #0056b3;
     text-decoration: underline;
+}
+
+.card-text {
+    font-size: 0.9rem;
 }
 
 .nav-btn {
@@ -95,18 +118,14 @@ footer {
     max-height: 400px;
     object-fit: cover;
 }
-.catalog-title {
-    background: linear-gradient(45deg, #007bff, #00d4ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
 
 @media (max-width: 768px) {
     .movie-cell {
         width: 100%;
         display: block;
     }
-    .card {
+    .movie-card {
+        max-width: 100%;
         margin-bottom: 20px;
     }
     .nav-btn {
