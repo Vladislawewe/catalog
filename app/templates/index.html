@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% block content %}
-<h1>Каталог фильмов</h1>
-<ul>
-    {% for movie in movies %}
-    <li>{{ movie.title }} ({{ movie.year }})</li>
-    {% endfor %}
-</ul>
-{% endblock %}

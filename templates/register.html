@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Регистрация</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <label>Имя</label>
+    {{ form.first_name }}
+    <label>Фамилия</label>
+    {{ form.last_name }}
+    <label>Email</label>
+    {{ form.email }}
+    <label>Пароль</label>
+    {{ form.password }}
+    <label>Подтвердите пароль</label>
+    {{ form.confirm_password }}
+    {{ form.submit }}
+</form>
+{% endblock %}

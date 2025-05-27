@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ movie.title }}</h1>
+<p>Год: {{ movie.year }}</p>
+<p>Жанр: {{ movie.genre.name }}</p>
+<p>Режиссер: {{ movie.director.first_name }} {{ movie.director.last_name }}</p>
+<p>Продолжительность: {{ movie.duration }} мин</p>
+<p>Рейтинг: {{ movie.rating }}</p>
+<h2>Актеры</h2>
+<ul>
+{% for actor in actors %}
+    <li>{{ actor.first_name }} {{ actor.last_name }}</li>
+{% endfor %}
+</ul>
+<h2>Отзывы</h2>
+<ul>
+{% for review in reviews %}
+    <li>
+        <p>Пользователь: {{ review.user.first_name }} {{ review.user.last_name }}</p>
+        <p>Рейтинг: {{ review.rating }}</p>
+        <p>Комментарий: {{ review.comment }}</p>
+    </li>
+{% endfor %}
+</ul>
+{% if current_user.is_authenticated %}
+    <a href="{{ url_for('add_review', id=movie.id) }}">Добавить отзыв</a>
+{% else %}
+    <p><a href="{{ url_for('login') }}">Войдите</a>, чтобы добавить отзыв.</p>
+{% endif %}
+{% endblock %}
