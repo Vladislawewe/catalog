@@ -1,24 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="mb-4">Каталог фильмов</h1>
-<div class="row">
-    {% for movie in movies %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <img src="{{ url_for('static', filename=movie.image_path or 'images/movie_placeholder.jpg') }}" class="card-img-top" alt="{{ movie.title }}">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <a href="{{ url_for('movie_detail', id=movie.id) }}">{{ movie.title }} ({{ movie.year }})</a>
-                    </h5>
-                    <p class="card-text">
-                        Жанр: {{ movie.genre.name }}<br>
-                        Рейтинг: {{ movie.rating if movie.rating is not none else 'Нет оценок' }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <p class="text-muted">Фильмы не найдены.</p>
-    {% endfor %}
-</div>
+<h1>Каталог фильмов</h1>
+<ul>
+{% for movie in movies %}
+    <li><a href="{{ url_for('movie_detail', id=movie.id) }}">{{ movie.title }} ({{ movie.year }})</a></li>
+{% endfor %}
+</ul>
 {% endblock %}
