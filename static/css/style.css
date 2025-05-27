@@ -11,7 +11,7 @@ body {
 
 .movie-table {
     width: 100%;
-    table-layout: fixed; /* Фиксированная ширина ячеек */
+    table-layout: fixed;
 }
 
 .movie-cell {
@@ -23,9 +23,9 @@ body {
 
 .movie-card {
     width: 100%;
-    max-width: 300px; /* Ограничиваем ширину карточки */
-    min-height: 450px; /* Фиксируем минимальную высоту */
-    margin: 0 auto; /* Центрируем карточку */
+    max-width: 300px;
+    min-height: 450px;
+    margin: 0 auto;
     transition: transform 0.2s;
     border: none;
     border-radius: 10px;
@@ -104,8 +104,14 @@ body {
     border-radius: 0.5rem;
 }
 
-.form-control {
+.form-control, .form-select {
     border-radius: 0.5rem;
+    border-color: #ced4da;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #343a40;
 }
 
 footer {

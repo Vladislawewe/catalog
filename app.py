@@ -1,10 +1,13 @@
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User
-from flask import Flask
+from models import db, User, Movie, Review, Actor, MovieActor, Genre, Director
+from forms import RegistrationForm, LoginForm, ReviewForm
+from flask_wtf import FlaskForm
+from wtforms import StringField, SelectField, SubmitField
+from wtforms.validators import Optional
 
 app = Flask(__name__)
 
@@ -12,14 +15,16 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhos
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-migrate = Migrate(app, db)
-
 db.init_app(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-from forms import RegistrationForm, LoginForm, ReviewForm
-from models import User, Movie, Review, Actor, MovieActor, Genre, Director
+
+class SearchForm(FlaskForm):
+    title = StringField('Название фильма', validators=[Optional()])
+    genre = SelectField('Жанр', coerce=int, validators=[Optional()])
+    submit = SubmitField('Найти')
 
 
 @login_manager.user_loader
@@ -27,10 +32,29 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    movies = Movie.query.all()
-    return render_template('index.html', movies=movies)
+    form = SearchForm()
+    # Заполняем жанры для выпадающего списка
+    genres = Genre.query.all()
+    form.genre.choices = [(0, 'Все жанры')] + [(g.id, f"{'-' * g.get_depth()} {g.name}") for g in genres]
+
+    movies = Movie.query
+    if form.validate_on_submit():
+        title = form.title.data.strip()
+        genre_id = form.genre.data
+
+        if title:
+            movies = movies.filter(Movie.title.ilike(f'%{title}%'))
+
+        if genre_id != 0:
+            # Находим жанр и все его поджанры
+            selected_genre = Genre.query.get(genre_id)
+            subgenre_ids = [g.id for g in selected_genre.get_all_subgenres()] + [genre_id]
+            movies = movies.filter(Movie.genre_id.in_(subgenre_ids))
+
+    movies = movies.all()
+    return render_template('index.html', movies=movies, form=form)
 
 
 @app.route('/movies/<int:id>')
@@ -84,7 +108,6 @@ def logout():
 @login_required
 def add_review(id):
     movie = Movie.query.get_or_404(id)
-    # Проверяем, оставил ли пользователь уже отзыв
     existing_review = Review.query.filter_by(movie_id=id, user_id=current_user.id).first()
     if existing_review:
         flash('Вы уже оставили отзыв на этот фильм.', 'warning')
@@ -100,7 +123,7 @@ def add_review(id):
         )
         db.session.add(review)
         db.session.commit()
-        movie.update_rating()  # Обновляем рейтинг фильма
+        movie.update_rating()
         flash('Отзыв успешно добавлен!', 'success')
         return redirect(url_for('movie_detail', id=id))
     return render_template('add_review.html', form=form, movie=movie)

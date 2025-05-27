@@ -2,9 +2,7 @@ from app import app, db
 from models import User, Movie, Genre, Director, Actor, Review
 from werkzeug.security import generate_password_hash
 
-# Используем контекст приложения Flask для работы с базой данных
 with app.app_context():
-    # Удаление дубликатов фильмов по title и year
     def remove_duplicate_movies():
         duplicates = (
             db.session.query(Movie.title, Movie.year)
@@ -13,27 +11,41 @@ with app.app_context():
             .all()
         )
         for title, year in duplicates:
-            # Находим все записи с этим title и year, оставляем только первую (с наименьшим id)
             movies = Movie.query.filter_by(title=title, year=year).order_by(Movie.id).all()
-            for movie in movies[1:]:  # Удаляем все, кроме первой
-                # Удаляем связанные отзывы и записи в movie_actors
+            for movie in movies[1:]:
                 Review.query.filter_by(movie_id=movie.id).delete()
                 db.session.execute(db.text("DELETE FROM movie_actors WHERE movie_id = :movie_id"), {"movie_id": movie.id})
                 db.session.delete(movie)
         db.session.commit()
 
-    # Вызываем удаление дубликатов
     remove_duplicate_movies()
 
-    # Проверяем и создаем жанры, если их еще нет
-    genres = {name: Genre.query.filter_by(name=name).first() or Genre(name=name)
-              for name in ['Боевик', 'Комедия', 'Драма', 'Фантастика', 'Триллер']}
-    for genre in genres.values():
-        if genre not in db.session:
+    # Создание иерархии жанров
+    genres = {}
+    genre_data = [
+        ('Боевик', None),
+        ('Военный боевик', 'Боевик'),
+        ('Приключенческий боевик', 'Боевик'),
+        ('Драма', None),
+        ('Историческая драма', 'Драма'),
+        ('Мелодрама', 'Драма'),
+        ('Комедия', None),
+        ('Фантастика', None),
+        ('Триллер', None)
+    ]
+    for name, parent_name in genre_data:
+        genre = Genre.query.filter_by(name=name).first()
+        if not genre:
+            genre = Genre(name=name)
+            if parent_name:
+                parent = Genre.query.filter_by(name=parent_name).first()
+                if parent:
+                    genre.parent_id = parent.id
             db.session.add(genre)
+        genres[name] = genre
     db.session.commit()
 
-    # Проверяем и создаем режиссеров, если их еще нет
+    # Проверяем и создаем режиссеров
     directors_data = [
         ('Стивен', 'Спилберг'), ('Кристофер', 'Нолан'),
         ('Квентин', 'Тарантино'), ('Джеймс', 'Кэмерон'), ('Дэвид', 'Финчер'),
@@ -50,11 +62,11 @@ with app.app_context():
         directors[f"{fname} {lname}"] = director
     db.session.commit()
 
-    # Проверяем и создаем актеров, если их еще нет
+    # Проверяем и создаем актеров
     actors_data = [
         ('Том', 'Хэнкс'), ('Леонардо', 'ДиКаприо'), ('Брюс', 'Уиллис'),
         ('Брэд', 'Питт'), ('Анджелина', 'Джоли'), ('Роберт', 'Де Ниро'),
-        ('Скарлетт', 'Йоханссон'), ('Морган', 'Фриман'), ('Кейт', 'Уинслет'),
+        ('Скарлетт', 'Йоханссон'), ('Морган', 'Фримен'), ('Кейт', 'Уинслет'),
         ('Джонни', 'Депп'), ('Энн', 'Хэтэуэй'), ('Хоакин', 'Феникс'),
         ('Зендая', 'Абобовна'), ('Том', 'Харди'), ('Эмили', 'Блант'),
         ('Райан', 'Гослинг'), ('Эмма', 'Стоун'), ('Киллиан', 'Мёрфи'),
@@ -70,7 +82,7 @@ with app.app_context():
         actors[f"{fname} {lname}"] = actor
     db.session.commit()
 
-    # Проверяем и создаем пользователей, если их еще нет
+    # Проверяем и создаем пользователей
     users_data = [
         ('Иван', 'Иванов', 'ivan@example.com', 'password'),
         ('Мария', 'Петрова', 'maria@example.com', 'password'),
@@ -92,11 +104,11 @@ with app.app_context():
         users[email] = user
     db.session.commit()
 
-    # Создание исходных фильмов
+    # Создание исходных фильмов с поджанрами
     movie1 = Movie(
         title='Спасти рядового Райана',
         year=1998,
-        genre=genres['Боевик'],
+        genre=genres['Военный боевик'],
         director=directors['Стивен Спилберг'],
         duration=169,
         image_path='images/saving_private_ryan.jpg'
@@ -106,7 +118,7 @@ with app.app_context():
     movie2 = Movie(
         title='Начало',
         year=2010,
-        genre=genres['Боевик'],
+        genre=genres['Приключенческий боевик'],
         director=directors['Кристофер Нолан'],
         duration=148,
         image_path='images/inception.jpg'
@@ -116,7 +128,7 @@ with app.app_context():
     movie3 = Movie(
         title='Темный рыцарь',
         year=2008,
-        genre=genres['Боевик'],
+        genre=genres['Приключенческий боевик'],
         director=directors['Кристофер Нолан'],
         duration=152,
         image_path='images/the_dark_knight.jpg'
@@ -129,12 +141,12 @@ with app.app_context():
             db.session.add(movie)
     db.session.commit()
 
-    # Добавление 10 новых фильмов
+    # Добавление новых фильмов с поджанрами
     new_movies_data = [
         {
             'title': 'Бешеные псы',
             'year': 1992,
-            'genre': genres['Боевик'],
+            'genre': genres['Приключенческий боевик'],
             'director': directors['Квентин Тарантино'],
             'duration': 99,
             'image_path': 'images/reservoir_dogs.jpg',
@@ -148,15 +160,15 @@ with app.app_context():
         {
             'title': 'Титаник',
             'year': 1997,
-            'genre': genres['Драма'],
+            'genre': genres['Мелодрама'],
             'director': directors['Джеймс Кэмерон'],
             'duration': 194,
             'image_path': 'images/titanic.jpg',
             'actors': [actors['Леонардо ДиКаприо'], actors['Кейт Уинслет']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Эмоциональная классика, до слез!'},
-                {'user': users['ekaterina@example.com'], 'rating': 6.5, 'comment': 'Слишком мелодраматично для меня.'},
-                {'user': users['dmitry@example.com'], 'rating': 8.0, 'comment': 'Хорошая история, отличные актеры.'}
+                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Эмоциональная классика!'},
+                {'user': users['ekaterina@example.com'], 'rating': 6.5, 'comment': 'Слишком мелодраматично.'},
+                {'user': users['dmitry@example.com'], 'rating': 8.0, 'comment': 'Хорошая история.'}
             ]
         },
         {
@@ -166,11 +178,11 @@ with app.app_context():
             'director': directors['Дэвид Финчер'],
             'duration': 139,
             'image_path': 'images/fight_club.jpg',
-            'actors': [actors['Брэд Питт'], actors['Морган Фриман']],
+            'actors': [actors['Брэд Питт'], actors['Морган Фримен']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Шедевр, неожиданный поворот!'},
+                {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Шедевр!'},
                 {'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Сильный, но путающий.'},
-                {'user': users['dmitry@example.com'], 'rating': 5.5, 'comment': 'Не понял смысла, слишком странно.'}
+                {'user': users['dmitry@example.com'], 'rating': 5.5, 'comment': 'Слишком странно.'}
             ]
         },
         {
@@ -182,51 +194,51 @@ with app.app_context():
             'image_path': 'images/alien.jpg',
             'actors': [actors['Скарлетт Йоханссон'], actors['Джонни Депп']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Классика научной фантастики!'},
-                {'user': users['ekaterina@example.com'], 'rating': 6.0, 'comment': 'Страшно, но не мое.'},
-                {'user': users['dmitry@example.com'], 'rating': 7.5, 'comment': 'Атмосферный, но староват.'}
+                {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Классика!'},
+                {'user': users['ekaterina@example.com'], 'rating': 6.0, 'comment': 'Страшно.'},
+                {'user': users['dmitry@example.com'], 'rating': 7.5, 'comment': 'Атмосферно.'}
             ]
         },
         {
             'title': 'Таксист',
             'year': 1976,
-            'genre': genres['Драма'],
+            'genre': genres['Историческая драма'],
             'director': directors['Мартин Скорсезе'],
             'duration': 114,
             'image_path': 'images/taxi_driver.jpg',
             'actors': [actors['Роберт Де Ниро'], actors['Энн Хэтэуэй']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Глубокий и мрачный фильм.'},
-                {'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Хороший, но тяжелый.'},
+                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Глубокий фильм.'},
+                {'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Тяжелый.'},
                 {'user': users['dmitry@example.com'], 'rating': 6.5, 'comment': 'Не всем зайдет.'}
             ]
         },
         {
             'title': 'Рок-н-рольщик',
             'year': 2008,
-            'genre': genres['Боевик'],
+            'genre': genres['Приключенческий боевик'],
             'director': directors['Гай Ричи'],
             'duration': 114,
             'image_path': 'images/rocknrolla.jpg',
             'actors': [actors['Том Харди'], actors['Эмили Блант']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 7.5, 'comment': 'Динамично и стильно!'},
-                {'user': users['ekaterina@example.com'], 'rating': 6.5, 'comment': 'Слишком запутанный сюжет.'},
-                {'user': users['dmitry@example.com'], 'rating': 8.0, 'comment': 'Крутой стиль Ричи!'}
+                {'user': users['alexey@example.com'], 'rating': 7.5, 'comment': 'Динамично!'},
+                {'user': users['ekaterina@example.com'], 'rating': 6.5, 'comment': 'Запутанный.'},
+                {'user': users['dmitry@example.com'], 'rating': 8.0, 'comment': 'Крутой стиль!'}
             ]
         },
         {
             'title': 'Любовное настроение',
             'year': 2000,
-            'genre': genres['Драма'],
+            'genre': genres['Мелодрама'],
             'director': directors['Вонг Кар-вай'],
             'duration': 98,
             'image_path': 'images/in_the_mood_for_love.jpg',
             'actors': [actors['Райан Гослинг'], actors['Эмма Стоун']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Красивая и эмоциональная история.'},
-                {'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Медленный, но атмосферный.'},
-                {'user': users['dmitry@example.com'], 'rating': 6.0, 'comment': 'Скучновато, не зацепило.'}
+                {'user': users['alexey@example.com'], 'rating': 8.5, 'comment': 'Красиво!'},
+                {'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Атмосферно.'},
+                {'user': users['dmitry@example.com'], 'rating': 6.0, 'comment': 'Скучновато.'}
             ]
         },
         {
@@ -238,9 +250,9 @@ with app.app_context():
             'image_path': 'images/dune.jpg',
             'actors': [actors['Зендая Абобовна'], actors['Тимоти Шаламе']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 9.0, 'comment': 'Эпичная экранизация!'},
-                {'user': users['ekaterina@example.com'], 'rating': 7.5, 'comment': 'Красиво, но затянуто.'},
-                {'user': users['dmitry@example.com'], 'rating': 6.5, 'comment': 'Не понял всей шумихи.'}
+                {'user': users['alexey@example.com'], 'rating': 9.0, 'comment': 'Эпично!'},
+                {'user': users['ekaterina@example.com'], 'rating': 7.5, 'comment': 'Затянуто.'},
+                {'user': users['dmitry@example.com'], 'rating': 6.5, 'comment': 'Не понял.'}
             ]
         },
         {
@@ -252,9 +264,9 @@ with app.app_context():
             'image_path': 'images/parasite.jpg',
             'actors': [actors['Сон Кан-хо'], actors['Чхве Мин-сик']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Гениальный фильм!'},
-                {'user': users['ekaterina@example.com'], 'rating': 8.0, 'comment': 'Интересно, но мрачно.'},
-                {'user': users['dmitry@example.com'], 'rating': 7.0, 'comment': 'Хороший, но переоцененный.'}
+                {'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Гениально!'},
+                {'user': users['ekaterina@example.com'], 'rating': 8.0, 'comment': 'Мрачно.'},
+                {'user': users['dmitry@example.com'], 'rating': 7.0, 'comment': 'Переоценен.'}
             ]
         },
         {
@@ -266,9 +278,9 @@ with app.app_context():
             'image_path': 'images/doctor_strange.jpg',
             'actors': [actors['Бенедикт Камбербэтч'], actors['Тильда Свинтон']],
             'reviews': [
-                {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Классные визуальные эффекты!'},
-                {'user': users['ekaterina@example.com'], 'rating': 6.6, 'comment': 'Сюжет предсказуемый.'},
-                {'user': users['dmitry@example.com'], 'rating': 7.5, 'comment': 'Зрелищно, но не шедевр.'}
+                {'user': users['alexey@example.com'], 'rating': 8.0, 'comment': 'Зрелищно!'},
+                {'user': users['ekaterina@example.com'], 'rating': 6.7, 'comment': 'Предсказуемо.'},
+                {'user': users['dmitry@example.com'], 'rating': 7.5, 'comment': 'Не шедевр.'}
             ]
         }
     ]
@@ -287,9 +299,7 @@ with app.app_context():
             for actor in movie_data['actors']:
                 movie.actors.append(actor)
             db.session.add(movie)
-            db.session.commit()  # Коммитим фильм для получения ID
-
-            # Добавляем отзывы
+            db.session.commit()
             for review_data in movie_data['reviews']:
                 review = Review(
                     movie=movie,
@@ -299,19 +309,19 @@ with app.app_context():
                 )
                 db.session.add(review)
             db.session.commit()
-            movie.update_rating()  # Обновляем рейтинг фильма
+            movie.update_rating()
 
     # Добавление отзывов для исходных фильмов
     existing_reviews = [
         {'movie': movie1, 'user': users['ivan@example.com'], 'rating': 9.0, 'comment': 'Отличный фильм!'},
-        {'movie': movie1, 'user': users['ekaterina@example.com'], 'rating': 7.5, 'comment': 'Хороший, но слишком длинный.'},
+        {'movie': movie1, 'user': users['ekaterina@example.com'], 'rating': 7.5, 'comment': 'Слишком длинный.'},
         {'movie': movie1, 'user': users['dmitry@example.com'], 'rating': 6.5, 'comment': 'Не зацепило.'},
-        {'movie': movie2, 'user': users['maria@example.com'], 'rating': 8.5, 'comment': 'Умопомрачительный сюжет!'},
+        {'movie': movie2, 'user': users['maria@example.com'], 'rating': 8.5, 'comment': 'Умопомрачительный!'},
         {'movie': movie2, 'user': users['alexey@example.com'], 'rating': 9.0, 'comment': 'Крутой фильм!'},
-        {'movie': movie2, 'user': users['dmitry@example.com'], 'rating': 6.0, 'comment': 'Сложно следить за сюжетом.'},
-        {'movie': movie3, 'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Лучший фильм Нолана!'},
-        {'movie': movie3, 'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Хорош, но переоценен.'},
-        {'movie': movie3, 'user': users['dmitry@example.com'], 'rating': 6.6, 'comment': 'Сюжет запутанный.'}
+        {'movie': movie2, 'user': users['dmitry@example.com'], 'rating': 6.0, 'comment': 'Сложно следить.'},
+        {'movie': movie3, 'user': users['alexey@example.com'], 'rating': 9.5, 'comment': 'Лучший Нолан!'},
+        {'movie': movie3, 'user': users['ekaterina@example.com'], 'rating': 7.0, 'comment': 'Переоценен.'},
+        {'movie': movie3, 'user': users['dmitry@example.com'], 'rating': 6.6, 'comment': 'Запутанный.'}
     ]
     for review_data in existing_reviews:
         if not Review.query.filter_by(movie_id=review_data['movie'].id, user_id=review_data['user'].id, comment=review_data['comment']).first():
@@ -324,7 +334,6 @@ with app.app_context():
             db.session.add(review)
     db.session.commit()
 
-    # Обновляем рейтинги для исходных фильмов
     for movie in [movie1, movie2, movie3]:
         movie.update_rating()
 
