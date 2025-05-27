@@ -1,30 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ movie.title }}</h1>
-<p>Год: {{ movie.year }}</p>
-<p>Жанр: {{ movie.genre.name }}</p>
-<p>Режиссер: {{ movie.director.first_name }} {{ movie.director.last_name }}</p>
-<p>Продолжительность: {{ movie.duration }} мин</p>
-<p>Рейтинг: {{ movie.rating }}</p>
+<div class="card mb-4">
+    <div class="row g-0">
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename=movie.image_path or 'images/movie_placeholder.jpg') }}" class="img-fluid rounded-start" alt="{{ movie.title }}">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h1 class="card-title">{{ movie.title }} ({{ movie.year }})</h1>
+                <p class="card-text">
+                    <strong>Жанр:</strong> {{ movie.genre.name }}<br>
+                    <strong>Режиссер:</strong> {{ movie.director.first_name }} {{ movie.director.last_name }}<br>
+                    <strong>Продолжительность:</strong> {{ movie.duration }} мин<br>
+                    <strong>Рейтинг:</strong> {{ movie.rating if movie.rating is not none else 'Нет оценок' }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <h2>Актеры</h2>
-<ul>
-{% for actor in actors %}
-    <li>{{ actor.first_name }} {{ actor.last_name }}</li>
-{% endfor %}
-</ul>
+<div class="row mb-4">
+    {% for actor in actors %}
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <p class="card-text">{{ actor.first_name }} {{ actor.last_name }}</p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-muted">Актеры не указаны.</p>
+    {% endfor %}
+</div>
+
 <h2>Отзывы</h2>
-<ul>
 {% for review in reviews %}
-    <li>
-        <p>Пользователь: {{ review.user.first_name }} {{ review.user.last_name }}</p>
-        <p>Рейтинг: {{ review.rating }}</p>
-        <p>Комментарий: {{ review.comment }}</p>
-    </li>
-{% endfor %}
-</ul>
-{% if current_user.is_authenticated %}
-    <a href="{{ url_for('add_review', id=movie.id) }}">Добавить отзыв</a>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ review.user.first_name }} {{ review.user.last_name }}</h5>
+            <p class="card-text">
+                <strong>Рейтинг:</strong> {{ review.rating }}<br>
+                <strong>Комментарий:</strong> {{ review.comment or 'Без комментария' }}
+            </p>
+        </div>
+    </div>
 {% else %}
-    <p><a href="{{ url_for('login') }}">Войдите</a>, чтобы добавить отзыв.</p>
+    <p class="text-muted">Отзывы отсутствуют.</p>
+{% endfor %}
+
+{% if current_user.is_authenticated %}
+    <a href="{{ url_for('add_review', id=movie.id) }}" class="btn btn-primary mt-3">Добавить отзыв</a>
+{% else %}
+    <p class="mt-3">Чтобы добавить отзыв, <a href="{{ url_for('login') }}">войдите</a>.</p>
 {% endif %}
 {% endblock %}
