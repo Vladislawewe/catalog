@@ -29,13 +29,13 @@
             <tr>
                 {% for movie in movies[i:i+3] %}
                 <td class="movie-cell">
-                    <div class="card h-100 shadow-sm movie-card">
-                        <img src="{{ url_for('static', filename=movie.image_path) }}" class="card-img-top" alt="{{ movie.title }}" loading="lazy">
+                    <div class="card shadow-sm movie-card">
+                        <img src="{{ url_for('static', filename=movie.image_path) }}" class="card-img-top movie-poster" alt="{{ movie.title }}" loading="lazy">
                         <div class="card-body">
-                            <h5 class="card-title text-truncate">
+                            <h5 class="card-title text-truncate movie-title">
                                 <a href="{{ url_for('movie_detail', id=movie.id) }}" class="text-decoration-none">{{ movie.title }} ({{ movie.year }})</a>
                             </h5>
-                            <p class="card-text">
+                            <p class="card-text movie-info">
                                 Жанр: {{ movie.genre.name }}<br>
                                 Рейтинг: {{ movie.rating if movie.rating is not none else 'Нет оценок' }}
                             </p>
