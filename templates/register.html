@@ -1,18 +1,74 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Регистрация</h1>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <label>Имя</label>
-    {{ form.first_name }}
-    <label>Фамилия</label>
-    {{ form.last_name }}
-    <label>Email</label>
-    {{ form.email }}
-    <label>Пароль</label>
-    {{ form.password }}
-    <label>Подтвердите пароль</label>
-    {{ form.confirm_password }}
-    {{ form.submit }}
-</form>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title text-center">Регистрация</h1>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label for="{{ form.first_name.id }}" class="form-label">Имя</label>
+                        {{ form.first_name(class="form-control") }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.first_name.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.last_name.id }}" class="form-label">Фамилия</label>
+                        {{ form.last_name(class="form-control") }}
+                        {% if form.last_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.last_name.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.email.id }}" class="form-label">Email</label>
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.password.id }}" class="form-label">Пароль</label>
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.confirm_password.id }}" class="form-label">Подтвердите пароль</label>
+                        {{ form.confirm_password(class="form-control") }}
+                        {% if form.confirm_password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.confirm_password.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">{{ form.submit.label.text }}</button>
+                </form>
+                <p class="mt-3 text-center">
+                    Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
