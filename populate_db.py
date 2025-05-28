@@ -304,8 +304,8 @@ with app.app_context():
                 review = Review(
                     movie=movie,
                     user=review_data['user'],
-                    rating=review_data['rating'],
-                    comment=review_data['comment']
+                    rating=review_data.get('rating', 0),
+                    comment=review_data.get('comment', '')
                 )
                 db.session.add(review)
             db.session.commit()
@@ -328,8 +328,8 @@ with app.app_context():
             review = Review(
                 movie=review_data['movie'],
                 user=review_data['user'],
-                rating=review_data['rating'],
-                comment=review_data['comment']
+                rating=review_data.get('rating', 0),
+                comment=review_data.get('comment', '')
             )
             db.session.add(review)
     db.session.commit()
